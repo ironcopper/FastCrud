@@ -2,97 +2,90 @@ from fastapi import FastAPI, Body
 
 app = FastAPI()
 
-courses_db = [
+
+movies_db = [
     {
         "id": 1,
-        "instructor": "Joshua",
-        "title": "Python",
-        "category": "Development"
+        "director": "Christopher Nolan",
+        "movie_title": "Inception",
+        "genre": "Sci-Fi"
     },
     {
         "id": 2,
-        "instructor": "John",
-        "title": "Java",
-        "category": "Development"
+        "director": "Steven Spielberg",
+        "movie_title": "Jurassic Park",
+        "genre": "Adventure"
     },
     {
         "id": 3,
-        "instructor": "John",
-        "title": "Deep Learning",
-        "category": "AI"
-    },
-    {
-        "id": 4,
-        "instructor": "Seth",
-        "title": "Jenkins",
-        "category": "Devops"
+        "director": "James Cameron",
+        "movie_title": "Avatar",
+        "genre": "Sci-Fi"
     }
 ]
 
 @app.get("/")
 async def hello():
-    return {"msg": "hello"}
+    return {"msg": "Welcome to the Movie Catalog API"}
 
-@app.get("/courses")
-async def get_all_courses():
-    return courses_db
+@app.get("/movies")
+async def get_all_movies():
+    return movies_db
 
-#path parameters
-@app.get("/courses/{course_title}")
-async def get_course(course_title):
-    for course in courses_db:
-        if course.get('title').casefold() == course_title.casefold():
-            return course
+# Search by movie title (path parameter)
+@app.get("/movies/{movie_title}")
+async def get_movie_by_title(movie_title: str):
+    for movie in movies_db:
+        if movie.get('movie_title').casefold() == movie_title.casefold():
+            return movie
 
-#this function does not work due to path çakışması
-@app.get("/courses/{course_id}")
-async def get_course(course_id):
-    for course in courses_db:
-        if course.get('id') == course_id:
-            return course
+# This route would clash with the above
+@app.get("/movies/{movie_id}")
+async def get_movie(movie_id):
+    for movie in movies_db:
+        if movie.get('id') == movie_id:
+            return movie
 
-#it can work by creating new path
-@app.get("/courses/byid/{course_id}")
-async def get_course(course_id):
-    for course in courses_db:
-        if course.get('id') == course_id:
-            return course
+# so we use a different path
+@app.get("/movies/byid/{movie_id}")
+async def get_movie_by_id(movie_id: int):
+    for movie in movies_db:
+        if movie.get('id') == movie_id:
+            return movie
 
-#by query
-@app.get("/courses/")
-async def get_category_by_query(category):
-    courses_to_return = []
-    for course in courses_db:
-        if course.get('category').casefold() == category.casefold():
-            courses_to_return.append(course)
-    return courses_to_return
+# Search by genre (query parameter)
+@app.get("/movies/")
+async def get_movies_by_genre(genre: str):
+    movies_to_return = []
+    for movie in movies_db:
+        if movie.get('genre').casefold() == genre.casefold():
+            movies_to_return.append(movie)
+    return movies_to_return
 
-#query and path used
-@app.get("/courses/{course_instructor}/")
-async def get_instructor_category_by_query(course_instructor, category):
-    courses_to_return = []
-    for course in courses_db:
-        if course.get('instructor').casefold() == course_instructor.casefold() and course.get('category').casefold() == category.casefold():
-            courses_to_return.append(course)
-    return courses_to_return
+# Search by director and genre (path + query)
+@app.get("/movies/{director}/")
+async def get_movies_by_director_and_genre(director: str, genre: str):
+    return [
+        movie for movie in movies_db
+        if movie.get('director').casefold() == director.casefold() and movie.get('genre').casefold() == genre.casefold()
+    ]
 
-#post
-@app.post("/courses/create_course")
-async def create_course(new_course=Body()):
-    courses_db.append(new_course)
+# Create a new movie (POST)
+@app.post("/movies/create_movie")
+async def create_movie(new_movie=Body()):
+    movies_db.append(new_movie)
 
-#put updates
-@app.put("/courses/update_course")
-async def update_course(updated_course=Body()):
-    for index in range(len(courses_db)):
-        if courses_db[index].get('id') == updated_course.get('id'):
-            courses_db[index] = updated_course
+# Update an existing movie (PUT)
+@app.put("/movies/update_movie")
+async def update_movie(updated_movie=Body()):
+    for index in range(len(movies_db)):
+        if movies_db[index].get('id') == updated_movie.get('id'):
+            movies_db[index] = updated_movie
 
-
-#delete
-@app.delete("/courses/delete_course/{course_id}")
-async def delete_course(course_id):
-    for index in range(len(courses_db)):
-        if courses_db[index].get('id') == course_id:
-            courses_db.pop(index)
+# Delete a movie (DELETE)
+@app.delete("/movies/delete_movie/{movie_id}")
+async def delete_movie(movie_id: int):
+    for index in range(len(movies_db)):
+        if movies_db[index].get('id') == movie_id:
+            movies_db.pop(index)
             break
